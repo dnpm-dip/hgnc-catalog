@@ -6,7 +6,7 @@
 
 name := "hgnc-gene-set"
 ThisBuild / organization := "de.dnpm.dip"
-ThisBuild / scalaVersion := "2.13.10"
+ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / version := "1.0-SNAPSHOT"
 
 
