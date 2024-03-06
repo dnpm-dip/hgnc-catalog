@@ -131,8 +131,8 @@ object HGNCGeneSet
     private val url            = s"https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/json/$filename"
     private val hgncDir        = "dnpm.dip.hgnc.dir"
     private val turnoverPeriod = Duration.of(7,DAYS)
-    private val connectTimeout = System.getProperty("dppm.hgnc.connectTimeout","5000").toInt
-    private val readTimeout    = System.getProperty("dppm.hgnc.readTimeout","15000").toInt 
+    private val connectTimeout = System.getProperty("dnpm.dip.hgnc.connectTimeout","5000").toInt
+    private val readTimeout    = System.getProperty("dnpm.dip.hgnc.readTimeout","30000").toInt 
 
 
     private val proxy: Option[Proxy] =
@@ -151,7 +151,7 @@ object HGNCGeneSet
     private val hgncFile =
       Eval.always {
         for {
-          path <- Option(System.getProperty("dppm.hgnc.dir")) 
+          path <- Option(System.getProperty(hgncDir)) 
           dir  =  new File(path)
           _    =  dir.mkdirs      
         } yield new File(dir,filename)
