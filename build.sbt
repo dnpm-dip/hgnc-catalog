@@ -57,7 +57,7 @@ lazy val tests = project
 
 lazy val dependencies =
   new {
-    val scalatest    = "org.scalatest"  %% "scalatest"  % "3.1.1" % Test
+    val scalatest   = "org.scalatest"  %% "scalatest"  % "3.1.1" % Test
     val core        = "de.dnpm.dip"    %% "core"       % "1.0-SNAPSHOT"
   }
 

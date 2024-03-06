@@ -32,10 +32,27 @@ class Tests extends AnyFlatSpec
   }
 
 
-  "Gene symbol" must "be defined on all entries" in {
+  private val symbols = 
+    Set(
+      "BRAF",
+      "BRCA1",
+      "KRAS",
+      "FGFR2",
+      "TP53"
+    )
+
+  it must s"contain gene symbols as display value" in {
+
+    forAll(symbols){
+      sym => geneSet.concepts.find(_.display == sym) must be (defined)
+    }
+  }
+
+
+  "Gene name" must "be defined on all entries" in {
 
     forAll(geneSet.concepts){
-      c => c.get(HGNC.Symbol) must be (defined)
+      c => c.get(HGNC.Name) must be (defined)
     }
   }
 

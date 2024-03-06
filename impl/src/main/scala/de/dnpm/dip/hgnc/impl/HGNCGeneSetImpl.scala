@@ -69,9 +69,9 @@ object HGNCGeneSet
         
               CodeSystem.Concept[HGNC](
                 Code((obj \ "hgnc_id").as[String]),
-                (obj \ "name").as[String],
+                (obj \ "symbol").as[String],
                 None,
-                Map(HGNC.Symbol.name -> Set((obj \ "symbol").as[String])) ++
+                Map(HGNC.Name.name -> Set((obj \ "name").as[String])) ++
                  (obj \ "prev_symbol").asOpt[Set[String]].map(vs => HGNC.PreviousSymbols.name -> vs) ++
                  (obj \ "alias_symbol").asOpt[Set[String]].map(vs => HGNC.AliasSymbols.name -> vs) ++
                  (obj \ "ensembl_gene_id").asOpt[String].map(v => HGNC.EnsemblID.name  -> Set(v)),
@@ -281,9 +281,7 @@ object HGNCGeneSet
 
 
     override val versionOrdering: Ordering[String] =
-      new Ordering[String]{ 
-        def compare(v1: String, v2: String) = 0
-      }
+      Version.Unordered
 
 
     override def versions(
@@ -295,6 +293,11 @@ object HGNCGeneSet
       implicit F: Applicative[F]
     ): F[String] =
       theVersion.pure
+
+    override def filters(
+      implicit F: Applicative[F]
+    ): F[List[CodeSystem.Filter[HGNC]]] =
+      List.empty.pure
 
     override def get(
       version: String
