@@ -6,7 +6,7 @@
 
 name := "hgnc-gene-set"
 ThisBuild / organization := "de.dnpm.dip"
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalaVersion := "2.13.13"
 ThisBuild / version := "1.0-SNAPSHOT"
 
 
@@ -57,7 +57,7 @@ lazy val tests = project
 
 lazy val dependencies =
   new {
-    val scalatest   = "org.scalatest"  %% "scalatest"  % "3.1.1" % Test
+    val scalatest   = "org.scalatest"  %% "scalatest"  % "3.2.18" % Test
     val core        = "de.dnpm.dip"    %% "core"       % "1.0-SNAPSHOT"
   }
 

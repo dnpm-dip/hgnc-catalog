@@ -1,7 +1,10 @@
 package de.dnpm.dip.hgnc.impl
 
 
-import cats.{Applicative,Eval}
+import cats.{
+  Applicative,
+  Eval
+}
 import cats.data.NonEmptyList
 import de.dnpm.dip.util.{
   Logging,
@@ -120,7 +123,7 @@ object HGNCGeneSet
     import java.io.{File,FileInputStream}
     import java.nio.file.{Files,StandardCopyOption}
     import java.nio.file.attribute.BasicFileAttributes
-    import java.net.{URL,Proxy,InetSocketAddress}
+    import java.net.{URI,URL,Proxy,InetSocketAddress}
     import java.util.concurrent.atomic.AtomicReference
     import java.util.concurrent.Executors
     import java.util.concurrent.TimeUnit.SECONDS
@@ -184,8 +187,8 @@ object HGNCGeneSet
 
         val connection =
           proxy match {
-            case Some(p) => new URL(url).openConnection(p)
-            case None    => new URL(url).openConnection
+            case Some(p) => URI.create(url).toURL.openConnection(p)
+            case None    => URI.create(url).toURL.openConnection
           }
 
         connection.setConnectTimeout(connectTimeout) // connection build-up timeout (in milli-seconds)
