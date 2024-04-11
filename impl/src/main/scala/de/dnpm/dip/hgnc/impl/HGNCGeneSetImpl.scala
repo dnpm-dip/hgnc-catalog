@@ -132,7 +132,7 @@ object HGNCGeneSet
     import scala.util.{Try,Failure,Success,Using}
 
     private val url            = s"https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/json/$filename"
-    private val hgncDir        = "dnpm.dip.hgnc.dir"
+    private val dataDirProp    = "dnpm.dip.data.dir"
     private val turnoverPeriod = Duration.of(7,DAYS)
     private val connectTimeout = System.getProperty("dnpm.dip.hgnc.connectTimeout","5000").toInt
     private val readTimeout    = System.getProperty("dnpm.dip.hgnc.readTimeout","30000").toInt 
@@ -154,12 +154,11 @@ object HGNCGeneSet
     private val hgncFile =
       Eval.always {
         for {
-          path <- Option(System.getProperty(hgncDir)) 
-          dir  =  new File(path)
+          path <- Option(System.getProperty(dataDirProp)) 
+          dir  =  new File(s"$path/hgnc")
           _    =  dir.mkdirs      
         } yield new File(dir,filename)
       }
-
 
     private val executor =
       Executors.newSingleThreadScheduledExecutor
@@ -219,7 +218,7 @@ object HGNCGeneSet
         hgncFile.value match {
 
           case None =>
-            log.warn(s"Failed to load HGNC gene set. This error occurs most likely due to undefined JVM property '$hgncDir'")
+            log.warn(s"Cannot load HGNC gene set from file. This error occurs most likely due to undefined JVM property '$dataDirProp'")
             log.warn("Falling back to pre-packaged HGNC set")
         
             Try(
