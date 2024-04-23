@@ -221,13 +221,11 @@ object HGNCGeneSet
             log.warn(s"Cannot load HGNC gene set from file. This error occurs most likely due to undefined JVM property '$dataDirProp'")
             log.warn("Falling back to pre-packaged HGNC set")
         
-            Try(
-              this.getClass.getClassLoader.getResourceAsStream(filename)
-            )
+            Try(this.getClass.getClassLoader.getResourceAsStream(filename))
         
-          case Some(file) => {
+          case Some(file) => 
             file match {
-              case f if (!f.exists) =>
+              case f if !f.exists || (f.exists && Files.readAttributes(f.toPath,classOf[BasicFileAttributes]).lastModifiedTime.toInstant.isBefore(Instant.now minus turnoverPeriod)) =>
                 fetchInto(f)
                   .map(new FileInputStream(_))
                   .recover {
@@ -238,26 +236,15 @@ object HGNCGeneSet
                       this.getClass.getClassLoader.getResourceAsStream(filename)
                   }
         
-              case f if (
-                f.exists &&
-                Files.readAttributes(f.toPath,classOf[BasicFileAttributes]) // or whether its last update is older than 'turnoverPeriod'
-                  .lastModifiedTime
-                  .toInstant
-                  .isBefore(Instant.now minus turnoverPeriod)
-              ) =>
-                fetchInto(f)
-                  .map(new FileInputStream(_))
-                  .recover {
-                    case t => new FileInputStream(file)
-                  }
+              case f => 
+                Try(new FileInputStream(f))
         
             }
-          }
+          
         }
       )
       .map(read(_))
       .get
-
     }
 
     override def geneSet: CodeSystem[HGNC] =
