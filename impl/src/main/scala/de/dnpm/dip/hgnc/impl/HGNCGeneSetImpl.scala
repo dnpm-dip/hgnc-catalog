@@ -131,7 +131,12 @@ object HGNCGeneSet
     import java.time.temporal.ChronoUnit.DAYS
     import scala.util.{Try,Failure,Success,Using}
 
-    private val url            = s"https://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/json/$filename"
+    private val url =
+      System.getProperty(
+        "dnpm.dip.hgnc.geneset.url",
+        s"https://storage.googleapis.com/public-download-files/hgnc/json/json/$filename"
+      )
+
     private val dataDirProp    = "dnpm.dip.data.dir"
     private val turnoverPeriod = Duration.of(7,DAYS)
     private val connectTimeout = System.getProperty("dnpm.dip.hgnc.connectTimeout","5000").toInt
