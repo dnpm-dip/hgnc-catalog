@@ -1,6 +1,5 @@
 # DNPM:DIP - HGNC Catalog
 
-HGNC Catalog Component improved/generalized from bwHC for DNPM:DIP.
+HGNC Catalog Component for DNPM:DIP.
 
-
-**WORK IN PROGRESS**
+This project uses the Complete gene set JSON provided by [HGNC](https://genenames.org/download/).
