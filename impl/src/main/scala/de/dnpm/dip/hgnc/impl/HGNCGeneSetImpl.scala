@@ -15,7 +15,6 @@ import de.dnpm.dip.coding.{
   Code,
   Coding,
   CodeSystem,
-  ValueSet,
   CodeSystemProvider,
   CodeSystemProviderSPI,
   Version
@@ -123,7 +122,7 @@ object HGNCGeneSet
     import java.io.{File,FileInputStream}
     import java.nio.file.{Files,StandardCopyOption}
     import java.nio.file.attribute.BasicFileAttributes
-    import java.net.{URI,URL,Proxy,InetSocketAddress}
+    import java.net.{URI,Proxy,InetSocketAddress}
     import java.util.concurrent.atomic.AtomicReference
     import java.util.concurrent.Executors
     import java.util.concurrent.TimeUnit.SECONDS
@@ -217,7 +216,6 @@ object HGNCGeneSet
           }
         )
       }
-
 
       (
         hgncFile.value match {
