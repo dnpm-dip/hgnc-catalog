@@ -48,7 +48,7 @@ object HGNCGeneSet
 
   trait Parser
   {
-    val filename: String
+//    val filename: String
 
     def read(in: InputStream): CodeSystem[HGNC]
   }
@@ -58,7 +58,8 @@ object HGNCGeneSet
 
     import play.api.libs.json.{Json,JsObject}
 
-    override val filename = "hgnc_complete_set.json"
+//    override val filename = "hgnc_complete_set.json"
+    val filename = "hgnc_complete_set.json"
  
     final def read(in: InputStream): CodeSystem[HGNC] = {
  
@@ -131,10 +132,8 @@ object HGNCGeneSet
     import scala.util.{Try,Failure,Success,Using}
 
     private val url =
-      System.getProperty(
-        "dnpm.dip.hgnc.geneset.url",
-        s"https://storage.googleapis.com/public-download-files/hgnc/json/json/$filename"
-      )
+      Option(System.getenv("HGNC_GENESET_URL"))
+        .getOrElse(s"https://storage.googleapis.com/public-download-files/hgnc/json/json/$filename")
 
     private val dataDirProp    = "dnpm.dip.data.dir"
     private val turnoverPeriod = Duration.of(7,DAYS)
