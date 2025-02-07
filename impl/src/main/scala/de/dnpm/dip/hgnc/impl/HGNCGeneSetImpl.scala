@@ -48,8 +48,6 @@ object HGNCGeneSet
 
   trait Parser
   {
-//    val filename: String
-
     def read(in: InputStream): CodeSystem[HGNC]
   }
 
@@ -58,7 +56,6 @@ object HGNCGeneSet
 
     import play.api.libs.json.{Json,JsObject}
 
-//    override val filename = "hgnc_complete_set.json"
     val filename = "hgnc_complete_set.json"
  
     final def read(in: InputStream): CodeSystem[HGNC] = {
@@ -165,8 +162,12 @@ object HGNCGeneSet
 
     private val executor =
       Executors.newSingleThreadScheduledExecutor
-    
-    private val loadedGeneSet =
+
+    private var failedTries = 0
+    private val maxTries    = 5
+    private val retryPeriod = 30L
+ 
+    private val loadedGeneSet: AtomicReference[CodeSystem[HGNC]] =
       new AtomicReference(loadGeneSet)
 
 
@@ -230,14 +231,30 @@ object HGNCGeneSet
               case f if !f.exists || (f.exists && Files.readAttributes(f.toPath,classOf[BasicFileAttributes]).lastModifiedTime.toInstant.isBefore(Instant.now minus turnoverPeriod)) =>
                 fetchInto(f)
                   .map(new FileInputStream(_))
-                  .recover {
-                    case t =>
+                  .transform(
+                    s => {
+                      failedTries = 0
+                      Success(s)
+                    },
+                    t => { 
                       log.warn(s"Failed to get current HGNC set from $url", t)
                       log.warn("Falling back to pre-packaged HGNC set")
-                    
-                      this.getClass.getClassLoader.getResourceAsStream(filename)
-                  }
-        
+
+                      failedTries += 1
+                      if (failedTries < maxTries){
+                        log.info(s"Retrying HGNC download in $retryPeriod seconds")
+                        executor.schedule(
+                          new Runnable { override def run = { loadedGeneSet.set(loadGeneSet) }},
+                          retryPeriod,
+                          SECONDS
+                        )
+                      } else
+                        log.error(s"Permanent HGNC download failure after $failedTries tries, ensure the overall configuration is correct")
+
+                      Try(this.getClass.getClassLoader.getResourceAsStream(filename))
+                    }
+                  )
+
               case f => 
                 Try(new FileInputStream(f))
         
