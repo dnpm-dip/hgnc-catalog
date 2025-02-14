@@ -1,6 +1,7 @@
 package de.dnpm.dip.hgnc.impl
 
 
+import scala.util.chaining._
 import cats.{
   Applicative,
   Eval
@@ -8,6 +9,7 @@ import cats.{
 import cats.data.NonEmptyList
 import de.dnpm.dip.util.{
   Logging,
+  Retry,
   SPI,
   SPILoader
 }
@@ -122,7 +124,10 @@ object HGNCGeneSet
     import java.nio.file.attribute.BasicFileAttributes
     import java.net.{URI,Proxy,InetSocketAddress}
     import java.util.concurrent.atomic.AtomicReference
-    import java.util.concurrent.Executors
+    import java.util.concurrent.{
+      Executors,
+      ScheduledExecutorService
+    }
     import java.util.concurrent.TimeUnit.SECONDS
     import java.time.{Duration,LocalTime,Instant}
     import java.time.temporal.ChronoUnit.DAYS
@@ -130,13 +135,13 @@ object HGNCGeneSet
 
     private val url =
       Option(System.getenv("HGNC_GENESET_URL"))
+        .orElse(Option(System.getProperty("dnpm.dip.hgnc.baseurl")))
         .getOrElse(s"https://storage.googleapis.com/public-download-files/hgnc/json/json/$filename")
 
     private val dataDirProp    = "dnpm.dip.data.dir"
     private val turnoverPeriod = Duration.of(7,DAYS)
     private val connectTimeout = System.getProperty("dnpm.dip.hgnc.connectTimeout","5000").toInt
     private val readTimeout    = System.getProperty("dnpm.dip.hgnc.readTimeout","30000").toInt 
-
 
     private val proxy: Option[Proxy] =
       Option(System.getProperty("https.proxyHost"))
@@ -160,29 +165,8 @@ object HGNCGeneSet
         } yield new File(dir,filename)
       }
 
-    private val executor =
-      Executors.newSingleThreadScheduledExecutor
 
-    private var failedTries = 0
-    private val maxTries    = 5
-    private val retryPeriod = 30L
- 
-    private val loadedGeneSet: AtomicReference[CodeSystem[HGNC]] =
-      new AtomicReference(loadGeneSet)
-
-
-    executor.scheduleAtFixedRate(
-      () => {
-        log.info("Updating HGNC gene set")
-        loadedGeneSet.set(loadGeneSet)
-      },
-      Duration.between(LocalTime.now,LocalTime.MAX).toSeconds,  // delay execution until Midnight
-      3600*24,                                                  // re-load every 24h (see above for actual turn-over period)
-      SECONDS
-    )
-
-
-    private def loadGeneSet: CodeSystem[HGNC] = {
+    private def loadGeneSet: Try[CodeSystem[HGNC]] = {
 
       def fetchInto(file: File): Try[File] = {
 
@@ -217,54 +201,66 @@ object HGNCGeneSet
         )
       }
 
-      (
-        hgncFile.value match {
+      hgncFile.value match {
+      
+        case Some(file) => 
+          file match {
+            case f if !f.exists || (f.exists && Files.readAttributes(f.toPath,classOf[BasicFileAttributes]).lastModifiedTime.toInstant.isBefore(Instant.now minus turnoverPeriod)) =>
+              fetchInto(f)
+                .map(new FileInputStream(_))
+                .map(read(_))
 
-          case None =>
-            log.warn(s"Cannot load HGNC gene set from file. This error occurs most likely due to undefined JVM property '$dataDirProp'")
-            log.warn("Falling back to pre-packaged HGNC set")
+            case f => 
+              Try(new FileInputStream(f))
+                .map(read(_))
+          }
+
+        case None =>
+          s"Couldn't load HGNC gene set from file. This error occurs most likely due to undefined JVM property '$dataDirProp'"
+            .tap(log.warn)
+            .pipe(msg => Failure(new Exception(msg)))
         
-            Try(this.getClass.getClassLoader.getResourceAsStream(filename))
-        
-          case Some(file) => 
-            file match {
-              case f if !f.exists || (f.exists && Files.readAttributes(f.toPath,classOf[BasicFileAttributes]).lastModifiedTime.toInstant.isBefore(Instant.now minus turnoverPeriod)) =>
-                fetchInto(f)
-                  .map(new FileInputStream(_))
-                  .transform(
-                    s => {
-                      failedTries = 0
-                      Success(s)
-                    },
-                    t => { 
-                      log.warn(s"Failed to get current HGNC set from $url", t)
-                      log.warn("Falling back to pre-packaged HGNC set")
+      }
 
-                      failedTries += 1
-                      if (failedTries < maxTries){
-                        log.info(s"Retrying HGNC download in $retryPeriod seconds")
-                        executor.schedule(
-                          new Runnable { override def run = { loadedGeneSet.set(loadGeneSet) }},
-                          retryPeriod,
-                          SECONDS
-                        )
-                      } else
-                        log.error(s"Permanent HGNC download failure after $failedTries tries, ensure the overall configuration is correct")
-
-                      Try(this.getClass.getClassLoader.getResourceAsStream(filename))
-                    }
-                  )
-
-              case f => 
-                Try(new FileInputStream(f))
-        
-            }
-          
-        }
-      )
-      .map(read(_))
-      .get
     }
+
+    private implicit val executor: ScheduledExecutorService =
+      Executors.newSingleThreadScheduledExecutor
+
+    private lazy val initGeneSet =
+      loadGeneSet
+
+    private val loadedGeneSet: AtomicReference[CodeSystem[HGNC]] =
+      new AtomicReference(
+        initGeneSet.recover {
+          case t => 
+            log.error("Error fetching HGNC gene set", t)
+            log.warn("Falling back to pre-packaged HGNC gene set")
+            read(this.getClass.getClassLoader.getResourceAsStream(filename))
+        }
+        .get
+      )
+
+    private val updateGeneSet =
+      Retry(
+        () => loadGeneSet.tap(_.foreach(loadedGeneSet.set)),
+        "Updating HGNC gene set",
+        5,
+        15
+      ) 
+
+    initGeneSet.fold(
+      _ => updateGeneSet.run,
+      _ => ()
+    )
+
+    executor.scheduleAtFixedRate(
+      updateGeneSet,
+      Duration.between(LocalTime.now,LocalTime.MAX).toSeconds,  // delay execution until Midnight
+      3600*24,                                                  // re-load every 24h (see above for actual turn-over period)
+      SECONDS
+    )
+
 
     override def geneSet: CodeSystem[HGNC] =
       loadedGeneSet.get
