@@ -1,13 +1,16 @@
+// build.sbt adapted from https://github.com/pbassiner/sbt-multi-project-example/blob/master/build.sbt
 
-/*
- build.sbt adapted from https://github.com/pbassiner/sbt-multi-project-example/blob/master/build.sbt
-*/
-
+import scala.util.Properties.envOrElse
 
 name := "hgnc-gene-set"
 ThisBuild / organization := "de.dnpm.dip"
 ThisBuild / scalaVersion := "2.13.16"
-ThisBuild / version := "1.0-SNAPSHOT"
+ThisBuild / version      := envOrElse("VERSION","1.0.0")
+
+val ownerRepo  = envOrElse("REPOSITORY","dnpm-dip/hgnc-catalog").split("/")
+ThisBuild / githubOwner      := ownerRepo(0)
+ThisBuild / githubRepository := ownerRepo(1)
+
 
 
 //-----------------------------------------------------------------------------
@@ -25,7 +28,6 @@ lazy val global = project
      tests
   )
 
-
 lazy val impl = project
   .settings(
     name := "hgnc-gene-set-impl",
@@ -35,7 +37,6 @@ lazy val impl = project
       dependencies.core,
     )
   )
-
 
 lazy val tests = project
   .settings(
@@ -58,7 +59,7 @@ lazy val tests = project
 lazy val dependencies =
   new {
     val scalatest   = "org.scalatest"  %% "scalatest"  % "3.2.18" % Test
-    val core        = "de.dnpm.dip"    %% "core"       % "1.0-SNAPSHOT"
+    val core        = "de.dnpm.dip"    %% "core"       % "1.0.0"
   }
 
 
@@ -111,17 +112,16 @@ lazy val compilerOptions = Seq(
   "-Wunused:privates",
   "-Wunused:implicits",
   "-Wvalue-discard",
-
-  // Deactivated to avoid many false positives from 'evidence' parameters in context bounds
-//  "-Wunused:params",
 )
 
 
 lazy val commonSettings = Seq(
   scalacOptions ++= compilerOptions,
-  resolvers ++=
-    Seq("Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository") ++
-    Resolver.sonatypeOssRepos("releases") ++
-    Resolver.sonatypeOssRepos("snapshots")
+  resolvers ++= Seq(
+    "Local Maven Repository" at "file://" + Path.userHome.absolutePath + "/.m2/repository",
+    Resolver.githubPackages("dnpm-dip"),
+    Resolver.sonatypeCentralSnapshots
+  )
+
 )
 
