@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/dnpm-dip/hgnc-catalog/compare/v1.0.0...v1.1.0) (2025-10-09)
+
+
+### Features
+
+* Upgraded dependency version: core ([beef11a](https://github.com/dnpm-dip/hgnc-catalog/commit/beef11a434d0d7d7370dc87c747cf974553f0848))
+
+
+### Bug Fixes
+
+* Added latest HGNC (2025-10-09) ([94d7098](https://github.com/dnpm-dip/hgnc-catalog/commit/94d7098e7278f0b97500601e6d8352253661b461))
+
 ## 1.0.0 (2025-08-06)
 
 
