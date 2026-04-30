@@ -4,7 +4,7 @@ import scala.util.Properties.envOrElse
 
 name := "hgnc-gene-set"
 ThisBuild / organization := "de.dnpm.dip"
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "2.13.18"
 ThisBuild / version      := envOrElse("VERSION","1.1.1")
 
 val ownerRepo  = envOrElse("REPOSITORY","dnpm-dip/hgnc-catalog").split("/")
@@ -59,7 +59,7 @@ lazy val tests = project
 lazy val dependencies =
   new {
     val scalatest   = "org.scalatest"  %% "scalatest"  % "3.2.18" % Test
-    val core        = "de.dnpm.dip"    %% "core"       % "1.1.4"
+    val core        = "de.dnpm.dip"    %% "core"       % "1.3.0"
   }
 
 
