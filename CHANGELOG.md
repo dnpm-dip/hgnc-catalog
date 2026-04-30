@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2](https://github.com/dnpm-dip/hgnc-catalog/compare/v1.1.1...v1.1.2) (2026-04-30)
+
+
+### Bug Fixes
+
+* bump scala version to 2.13.18 and core to 1.3.0 ([eb5a8d3](https://github.com/dnpm-dip/hgnc-catalog/commit/eb5a8d3611e2417f652d73e123945bc49ca2f28b))
+* updated packaged HGNC complete set ([eb5a8d3](https://github.com/dnpm-dip/hgnc-catalog/commit/eb5a8d3611e2417f652d73e123945bc49ca2f28b))
+
 ## [1.1.1](https://github.com/dnpm-dip/hgnc-catalog/compare/v1.1.0...v1.1.1) (2025-11-20)
 
 
