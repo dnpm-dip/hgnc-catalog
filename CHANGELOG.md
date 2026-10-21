@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.4](https://github.com/dnpm-dip/hgnc-catalog/compare/v1.1.3...v1.1.4) (2026-10-21)
+
+
+### Bug Fixes
+
+* bump dependencies ([b3a2105](https://github.com/dnpm-dip/hgnc-catalog/commit/b3a2105e2413e204c9ffa9b6442e321f35b76e3b))
+* updated packaged hgnc_complete_set.json ([b3a2105](https://github.com/dnpm-dip/hgnc-catalog/commit/b3a2105e2413e204c9ffa9b6442e321f35b76e3b))
+
 ## [1.1.3](https://github.com/dnpm-dip/hgnc-catalog/compare/v1.1.2...v1.1.3) (2026-07-14)
 
 
